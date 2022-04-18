@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const router = express.Router();
 const User = require("./../models/user");
 
+router.use(addResponseHeader);
+
 //Added for testing purposes
 router.get("/", (req, res) => {
   User.find({}, (err, users) => {
@@ -15,7 +17,7 @@ router.get("/", (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const hashedPassword = await bcrypt.hash(req.body.password, 10)
+  const hashedPassword = await bcrypt.hash(req.body.password, 10);
   const user = new User({
     name: req.body.name,
     email: req.body.email,
@@ -34,6 +36,7 @@ router.post("/", async (req, res) => {
 router.post("/login", async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  console.log(email, password);
 
   if (!email || !password) return res.status(400).send("Email and password required");
 
@@ -41,14 +44,14 @@ router.post("/login", async (req, res) => {
     const users = await User.find({ email: email });
 
     if (users.length === 0) {
-      res.status(400).send("User not found");
+      res.status(404).send("User not found");
     } else {
       const user = users[0];
-      if( await bcrypt.compare(password, user.password) ){
+      if (await bcrypt.compare(password, user.password)) {
         //only return userId and name
-        res.status(200).send({ userId: user._id, name: user.name });
+        res.status(200).send({ id: user._id, name: user.name, favourites: user.favourites });
       } else {
-        res.status(400).send("Incorrect password");
+        res.status(404).send("Incorrect password");
       }
     }
   } catch (err) {
@@ -145,7 +148,6 @@ async function validateMovieId(req, res, next) {
     return res.status(500).send(err);
   }
 
-
   next();
 }
 
@@ -165,6 +167,13 @@ function saveUser() {
       res.status(500).send(err);
     }
   };
+}
+
+function addResponseHeader(req, res, next) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
 }
 
 module.exports = router;
