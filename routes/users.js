@@ -32,16 +32,26 @@ router.post("/", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const user = user.find((user) => user.name === req.body.name);
-  if (!user) return res.status(400).send("User not found");
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password) return res.status(400).send("Email and password required");
 
   try {
-    if (bcrypt.compare(req.body.password, user.password)) {
-      res.send("Logged in");
+    const users = await User.find({ email: email });
+
+    if (users.length === 0) {
+      res.status(400).send("User not found");
     } else {
-      res.status(400).send("Not Allowed");
+      const user = users[0];
+      if( await bcrypt.compare(password, user.password) ){
+        //only return userId and name
+        res.status(200).send({ userId: user._id, name: user.name });
+      } else {
+        res.status(400).send("Incorrect password");
+      }
     }
-  } catch (err){
+  } catch (err) {
     res.status(500).send(err);
   }
 });
