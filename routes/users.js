@@ -6,6 +6,7 @@ const User = require("./../models/user");
 router.use(addResponseHeader);
 
 //Added for testing purposes
+// GET all users
 router.get("/", (req, res) => {
   User.find({}, (err, users) => {
     if (err) {
@@ -16,6 +17,7 @@ router.get("/", (req, res) => {
   });
 });
 
+// POST new user
 router.post("/", async (req, res) => {
   const hashedPassword = await bcrypt.hash(req.body.password, 10);
   const user = new User({
@@ -33,6 +35,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+// POST User Login
 router.post("/login", async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -59,13 +62,14 @@ router.post("/login", async (req, res) => {
   }
 });
 
-//UserID
+// GET user by id
 router.get("/:id", async (req, res) => {
   console.log(req.params.id);
   const user = await User.findById(req.params.id);
   console.log(user);
 });
 
+// PATCH Update User by id
 router.patch(
   "/:id",
   async (req, res, next) => {
@@ -75,10 +79,12 @@ router.patch(
   saveUser()
 );
 
+// GET user favourites
 router.get("/:id/favourites", validateUserId, async (req, res) => {
   res.status(200).json(req.user.favourites);
 });
 
+// PATCH add movie to favourites
 router.patch("/:id/favourites", validateUserId, validateMovieId, async (req, res) => {
   let user = req.user;
   let movieId = req.body.movieId;
@@ -97,6 +103,7 @@ router.patch("/:id/favourites", validateUserId, validateMovieId, async (req, res
   }
 });
 
+// DELETE movie from favourites
 router.delete("/:id/favourites", validateUserId, validateMovieId, async (req, res) => {
   let user = req.user;
   let movieId = req.body.movieId;
